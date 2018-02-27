@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/noelyahan/gonyvido"
+	gonyvido "github.com/noelyahan/gonyvido/api"
 )
 
 var url string

@@ -1,15 +1,14 @@
-package gonyvido
+package youtube
 
 import (
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 	s "strings"
+	"github.com/noelyahan/gonyvido/domain"
 )
 
 const (
@@ -18,63 +17,8 @@ const (
 	YoutubeShortUrl     = "youtu.be"
 )
 
-type Video struct {
-	title     string
-	author    string
-	quality   string
-	videoType string
-	url       string
 
-	videoLength      int
-	downloadedLength int
-	DownloadP        chan int
-	savePath         string
-}
-
-func (v *Video) getUrl() string {
-	return v.url
-}
-
-func (v Video) getExt() string {
-	ext := s.Split(v.videoType, ";")[0]
-	ext = s.Split(ext, "/")[1]
-	return "." + ext
-}
-
-func (v Video) getFileName() string {
-	fileName := s.Replace(v.title, "|", "", -1)
-	return fileName
-}
-
-func (v Video) getSavePath() string {
-	return v.savePath
-}
-
-func (v Video) GetType() string {
-	return v.videoType
-}
-
-func (v Video) GetTitle() string {
-	return v.title
-}
-
-func (v Video) GetAuthor() string {
-	return v.author
-}
-
-func (v Video) GetQuality() string {
-	return v.quality
-}
-
-func (v *Video) SetSavePath(savePath string) *Video {
-	v.savePath = savePath
-	if string(savePath[len(savePath)-1]) != "/" {
-		v.savePath += "/"
-	}
-	return v
-}
-
-func GetYoutubeVideos(url string) ([]Video, error) {
+func GetYoutubeVideos(url string) ([]domain.Video, error) {
 	var videoId string
 	splitted := s.Split(url, "=")
 	if len(splitted) > 1 {
@@ -104,52 +48,7 @@ func GetYoutubeVideos(url string) ([]Video, error) {
 	return videos, nil
 }
 
-func (v *Video) Write(b []byte) (n int, err error) {
-	v.downloadedLength = v.downloadedLength + len(b)
-	p := (100 / (v.videoLength / v.downloadedLength))
-	v.DownloadP <- p
-	if p == 100 && v.videoLength <= v.downloadedLength {
-		close(v.DownloadP)
-	}
-	return len(b), nil
-}
-
-func (v *Video) Download() Video {
-	go func() {
-		resp, err := http.Get(v.getUrl())
-		if err != nil {
-			fmt.Println(err)
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != 200 {
-			fmt.Println(err)
-		}
-		v.videoLength = int(resp.ContentLength)
-
-		out, err := os.Create(v.getSavePath() + v.getFileName() + v.getExt())
-		if err != nil {
-			fmt.Println(err)
-		}
-		mw := io.MultiWriter(out, v)
-		_, err = io.Copy(mw, resp.Body)
-		if err != nil {
-			fmt.Println(err)
-		}
-	}()
-	return Video{
-		v.title,
-		v.author,
-		v.quality,
-		v.videoType,
-		v.url,
-		v.videoLength,
-		v.downloadedLength,
-		v.DownloadP,
-		"./",
-	}
-}
-
-func getVideoInfo(url string) ([]Video, error) {
+func getVideoInfo(url string) ([]domain.Video, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -222,25 +121,21 @@ func extractFromInfoApi(strBody string) (string, string, string, error) {
 	return title, author, streamMapStr, nil
 }
 
-func constructVideos(title, author, streamMapStr string) ([]Video, error) {
+func constructVideos(title, author, streamMapStr string) ([]domain.Video, error) {
 	streamList := s.Split(streamMapStr, ",")
-	videos := make([]Video, 0)
+	videos := make([]domain.Video, 0)
 	for _, streamItem := range streamList {
 		stream, err := url.ParseQuery(streamItem)
 		if err != nil {
 			return nil, err
 		}
-		videos = append(videos, Video{
+		videos = append(videos, domain.NewVideo(
 			title,
 			author,
 			stream["quality"][0],
 			stream["type"][0],
 			stream["url"][0],
-			0,
-			0,
-			make(chan int),
-			"./",
-		})
+		))
 	}
 	return videos, nil
 }
