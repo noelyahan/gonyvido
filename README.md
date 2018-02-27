@@ -8,7 +8,10 @@ gonyvido provides a higher-level programming interface for integrate video downl
 
 _IMPORTANT:_ gonyvido is still in development phase so please please feel free to contribute and expand it to other video downloading sites.
 
-Download the release packages or build the [gonyvido example](examples) to try it out ! :v:
+install & try it out ! :v:
+```
+gonyvido --url https://www.youtube.com/watch?v=3sCGysVB41k
+```
 
 ![Micro](./assets/gonyvido-app.gif)
 
@@ -40,7 +43,7 @@ func main() {
 ```
 ## Getting started
 
-If you want to know what it is like to build applications with gonyvido, check out some of the [examples](examples).
+If you want to know what it is like to build applications with gonyvido, check [main.go](main/main.go).
 
 ## Related projects
 
