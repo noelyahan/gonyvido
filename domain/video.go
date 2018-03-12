@@ -18,7 +18,7 @@ type Video struct {
 
 	videoLength      int
 	downloadedLength int
-	DownloadP        chan int
+	downloadPro      chan float64
 	savePath         string
 }
 
@@ -74,43 +74,45 @@ func NewVideo(t, a, q, vt, url string) Video {
 		url,
 		0,
 		0,
-		make(chan int),
+		make(chan float64),
 		"./",
 	}
 }
 
-
-func (v Video) ShowProgress() {
+func (v Video) showProgress() {
 	fmt.Println("Downloading: " + v.GetTitle() + " " + v.GetQuality())
 	uiprogress.Start()
 	bar := uiprogress.AddBar(100)
 	bar.AppendCompleted()
 	bar.PrependElapsed()
 	pVal := 0
-	for p := range v.DownloadP {
-		if pVal != p {
-			diff := p - pVal
-			for i := 0; i < diff; i++ {
-				bar.Incr()
+	for p := range v.downloadPro {
+		if pVal != int(p) {
+			bar.Incr()
+			pVal = int(p)
+			if pVal >= 98 {
+				for i := pVal; i < 100; i++ {
+					bar.Incr()
+				}
 			}
-			pVal = p
 		}
 	}
+
 	fmt.Println("Finished: " + v.GetTitle() + " quality: " + v.GetQuality())
 }
 
-
 func (v *Video) Write(b []byte) (n int, err error) {
 	v.downloadedLength = v.downloadedLength + len(b)
-	p := (100 / (v.videoLength / v.downloadedLength))
-	v.DownloadP <- p
-	if p == 100 && v.videoLength <= v.downloadedLength {
-		close(v.DownloadP)
+	p := 100 / (float64(v.videoLength) / float64(v.downloadedLength))
+	v.downloadPro <- p
+	if p == 100 {
+		close(v.downloadPro)
 	}
 	return len(b), nil
 }
 
 func (v *Video) Download() Video {
+	// this has to have a public chan to notify the download is done
 	go func() {
 		resp, err := http.Get(v.getUrl())
 		if err != nil {
@@ -132,6 +134,10 @@ func (v *Video) Download() Video {
 			fmt.Println(err)
 		}
 	}()
+
+	// show progress bar here
+	v.showProgress()
+
 	return Video{
 		v.title,
 		v.author,
@@ -140,8 +146,7 @@ func (v *Video) Download() Video {
 		v.url,
 		v.videoLength,
 		v.downloadedLength,
-		v.DownloadP,
+		v.downloadPro,
 		"./",
 	}
 }
-
