@@ -7,7 +7,7 @@ import (
 	"github.com/noelyahan/gonyvido/youtube"
 )
 
-func Find(url string) []domain.Video {
+func find(url string) []domain.Video {
 	videos, err := youtube.GetYoutubeVideos(url)
 	if err != nil {
 		fmt.Println(err)
@@ -30,7 +30,7 @@ func GetLQVideo(url string) *domain.Video {
 
 
 func getFilteredVideo(url, vtype string) *domain.Video {
-	videos := Find(url)
+	videos := find(url)
 	for _, video := range videos {
 		if s.Contains(video.GetQuality(), vtype) {
 			return &video

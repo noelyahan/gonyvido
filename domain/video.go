@@ -7,6 +7,8 @@ import (
 	"os"
 	"net/http"
 	"io"
+	"log"
+	"os/exec"
 )
 
 type Video struct {
@@ -20,6 +22,7 @@ type Video struct {
 	downloadedLength int
 	downloadPro      chan float64
 	savePath         string
+	done             chan struct{}
 }
 
 func (v *Video) getUrl() string {
@@ -76,11 +79,12 @@ func NewVideo(t, a, q, vt, url string) Video {
 		0,
 		make(chan float64),
 		"./",
+		make(chan struct{}),
 	}
 }
 
 func (v Video) showProgress() {
-	fmt.Println("Downloading: " + v.GetTitle() + " " + v.GetQuality())
+	fmt.Println(`Downloading:	` + v.GetTitle() + " " + v.GetQuality())
 	uiprogress.Start()
 	bar := uiprogress.AddBar(100)
 	bar.AppendCompleted()
@@ -97,8 +101,9 @@ func (v Video) showProgress() {
 			}
 		}
 	}
+	uiprogress.Stop()
 
-	fmt.Println("Finished: " + v.GetTitle() + " quality: " + v.GetQuality())
+	fmt.Println(`Finished:	` + v.GetTitle() + ` quality: ` + v.GetQuality())
 }
 
 func (v *Video) Write(b []byte) (n int, err error) {
@@ -107,22 +112,27 @@ func (v *Video) Write(b []byte) (n int, err error) {
 	v.downloadPro <- p
 	if p == 100 {
 		close(v.downloadPro)
+		close(v.done)
 	}
 	return len(b), nil
 }
 
-func (v *Video) Download() Video {
+func (v *Video) Download() *Video {
 	// this has to have a public chan to notify the download is done
 	go func() {
 		resp, err := http.Get(v.getUrl())
 		if err != nil {
-			fmt.Println(err)
+			log.Fatalln("Please check your internet connection", err)
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode != 200 {
-			fmt.Println(err)
+			log.Fatalln("Please check your internet connection", err)
 		}
 		v.videoLength = int(resp.ContentLength)
+
+		if _, err := os.Stat(v.getSavePath()); err != nil {
+			os.MkdirAll(v.getSavePath(), os.ModePerm)
+		}
 
 		out, err := os.Create(v.getSavePath() + v.getFileName() + v.getExt())
 		if err != nil {
@@ -138,15 +148,33 @@ func (v *Video) Download() Video {
 	// show progress bar here
 	v.showProgress()
 
-	return Video{
-		v.title,
-		v.author,
-		v.quality,
-		v.videoType,
-		v.url,
-		v.videoLength,
-		v.downloadedLength,
-		v.downloadPro,
-		"./",
+	return v
+}
+
+func (v *Video) ToMP3() {
+	<-v.done
+	mp3 := v.getFileName() + ".mp3"
+	mp4 := v.getFileName() + v.getExt()
+	removeMP4 := func() {
+		err := os.Remove(v.savePath + mp4)
+		if err != nil {
+			fmt.Errorf("Could not delete: ", mp4)
+		}
 	}
+	ffmpeg, err := exec.LookPath("ffmpeg")
+	if err != nil {
+		removeMP4()
+		log.Fatal("ffmpeg not found")
+	}
+	fmt.Println(`Converting:	` + v.GetTitle() + ` to mp3`)
+	cmd := exec.Command(ffmpeg, "-y", "-loglevel", "quiet", "-i", v.getSavePath()+mp4, "-b:a", "320K", "-vn", v.getSavePath()+mp3)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		removeMP4()
+		log.Fatal("Failed to convert the mp3: ", err)
+	}
+	fmt.Println(`Finished:	` + v.GetTitle() + `.mp3`)
+	removeMP4()
 }

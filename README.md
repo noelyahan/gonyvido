@@ -27,13 +27,15 @@ go get github.com/noelyahan/gonyvido
 package main
 
 import (
-	"github.com/noelyahan/gonyvido"
+	"github.com/noelyahan/gonyvido/api"
 )
 
 func main() {
     // go lang song :)
     url := "https://www.youtube.com/watch?v=LJvEIjRBSDA"
-    gonyvido.GetHQVideo(url).Download().ShowProgress()
+    api.GetHQVideo(url).Download()
+    // if you need only the audio
+    api.GetHQVideo(url).Download().ToMP3()
     /*
     gonyvido.GetHQVideo(url) - > get high quality video
     gonyvido.GetMQVideo(url) - > get medium quality video
