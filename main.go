@@ -15,8 +15,8 @@ const (
 func main() {
 	url := flag.String("url", defaultUrl, "Video download url")
 	savePath := flag.String("path", defaultSavePath, "Video download path")
-	quality := flag.String("quality", defaultQuality, "Video download quality")
-	toMp3 := flag.Bool("mp3", false, "y/n to download mp3")
+	quality := flag.String("quality", defaultQuality, "Video download quality <high, medium, low>")
+	toMp3 := flag.Bool("mp3", false, "Enable this flag for mp3 file")
 
 	flag.Parse()
 

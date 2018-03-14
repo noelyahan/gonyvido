@@ -126,7 +126,7 @@ func (v *Video) Download() *Video {
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode != 200 {
-			log.Fatalln("Please check your internet connection", err)
+			log.Fatalln("Download failed")
 		}
 		v.videoLength = int(resp.ContentLength)
 
@@ -155,26 +155,26 @@ func (v *Video) ToMP3() {
 	<-v.done
 	mp3 := v.getFileName() + ".mp3"
 	mp4 := v.getFileName() + v.getExt()
-	removeMP4 := func() {
-		err := os.Remove(v.savePath + mp4)
-		if err != nil {
-			fmt.Errorf("Could not delete: ", mp4)
-		}
-	}
+	//file := v.savePath + mp4
 	ffmpeg, err := exec.LookPath("ffmpeg")
 	if err != nil {
-		removeMP4()
 		log.Fatal("ffmpeg not found")
 	}
 	fmt.Println(`Converting:	` + v.GetTitle() + ` to mp3`)
-	cmd := exec.Command(ffmpeg, "-y", "-loglevel", "quiet", "-i", v.getSavePath()+mp4, "-b:a", "320K", "-vn", v.getSavePath()+mp3)
+	cmd := exec.Command(ffmpeg, "-y", "-loglevel", "quiet", "-i", v.getSavePath() + mp4, "-b:a", "320K", "-vn", v.getSavePath() + mp3)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		removeMP4()
 		log.Fatal("Failed to convert the mp3: ", err)
 	}
 	fmt.Println(`Finished:	` + v.GetTitle() + `.mp3`)
-	removeMP4()
+}
+
+
+func removeFile(file string) {
+	err := os.Remove(file)
+	if err != nil {
+		fmt.Println("Could not delete: ", file, err)
+	}
 }

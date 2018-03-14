@@ -13,7 +13,7 @@ import (
 
 const (
 	YoutubeVideoInfoApi = "http://youtube.com/get_video_info?video_id="
-	YoutubeWatchUrl     = "//www.youtube.com/watch?v"
+	YoutubeWatchUrl     = "https://www.youtube.com/watch?v"
 	YoutubeShortUrl     = "youtu.be"
 )
 

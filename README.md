@@ -21,6 +21,12 @@ gonyvido --url https://www.youtube.com/watch?v=3sCGysVB41k
 go get github.com/noelyahan/gonyvido
 ```
 
+## Quick Use
+
+```
+gonyvido -path "./download/mp3" -mp3 -url https://www.youtube.com/watch?v=_P7S2lKif-A
+```
+
 ## Usage
 
 ```go
@@ -37,15 +43,15 @@ func main() {
     // if you need only the audio
     api.GetHQVideo(url).Download().ToMP3()
     /*
-    gonyvido.GetHQVideo(url) - > get high quality video
-    gonyvido.GetMQVideo(url) - > get medium quality video
-    gonyvido.GetLQVideo(url) - > get low quality video
+    api.GetHQVideo(url) - > get high quality video
+    api.GetMQVideo(url) - > get medium quality video
+    api.GetLQVideo(url) - > get low quality video
     */	
 }
 ```
 ## Getting started
 
-If you want to know what it is like to build applications with gonyvido, check [main.go](main/main.go).
+If you want to know what it is like to build applications with gonyvido, check [main.go](main.go).
 
 ## Related projects
 
