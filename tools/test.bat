@@ -1,0 +1,12 @@
+gonyvido -url "https://youtu.be/hPsaAFBsFJQ" -quality high -path ./downloads -mp3
+gonyvido -url "https://youtu.be/hPsaAFBsFJQ?list=RDMMhPsaAFBsFJQ" -quality low -path ./downloads -mp3
+gonyvido -url "https://youtu.be/hPsaAFBsFJQ?list=RDMMhPsaAFBsFJQ" -quality medium -path ./downloads -mp3
+gonyvido -url "https://www.youtube.com/watch?v=ar-3chBG4NU&list=RDMMhPsaAFBsFJQ&index=3" -quality high -path ./downloads -mp3
+gonyvido -url "https://www.youtube.com/watch?v=ar-3chBG4NU&list=RDMMhPsaAFBsFJQ&index=3" -quality low -path ./downloads -mp3
+gonyvido -url "https://www.youtube.com/watch?v=ar-3chBG4NU&list=RDMMhPsaAFBsFJQ&index=3" -quality medium -path ./downloads -mp3
+gonyvido -url "https://www.youtube.com/watch?v=285VO0GHFFg" -quality high -path ./downloads -mp3
+gonyvido -url "https://www.youtube.com/watch?v=285VO0GHFFg" -quality low -path ./downloads -mp3
+gonyvido -url "https://www.youtube.com/watch?v=285VO0GHFFg" -quality medium -path ./downloads -mp3
+gonyvido -url "https://www.youtube.com/watch?v=kvbZyeDipvs" -quality high -path ./downloads -mp3
+gonyvido -url "https://www.youtube.com/watch?v=kvbZyeDipvs" -quality low -path ./downloads -mp3
+gonyvido -url "https://www.youtube.com/watch?v=kvbZyeDipvs" -quality medium -path ./downloads -mp3
