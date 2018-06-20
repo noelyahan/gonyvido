@@ -36,6 +36,6 @@ func getFilteredVideo(url, vtype string) *domain.Video {
 			return &video
 		}
 	}
-	v := domain.NewVideo("", "", "", "", "")
+	v := domain.NewVideo("", "", "", "", "", "")
 	return &v
 }

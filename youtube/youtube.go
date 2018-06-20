@@ -15,6 +15,7 @@ const (
 	YoutubeVideoInfoApi = "http://youtube.com/get_video_info?video_id="
 	YoutubeWatchUrl     = "https://www.youtube.com/watch?v"
 	YoutubeShortUrl     = "youtu.be"
+	youtubeBaseURL     = "https://www.youtube.com/"
 )
 
 
@@ -33,19 +34,19 @@ func GetYoutubeVideos(url string) ([]domain.Video, error) {
 	if s.Contains(videoId, "&") {
 		videoId = s.Split(videoId, "&")[0]
 	}
-	infoApiUrl := YoutubeVideoInfoApi + videoId
+	//infoApiUrl := YoutubeVideoInfoApi + videoId
 	defaultApiUrl := YoutubeWatchUrl + "=" + videoId
 
-	videos, err := getVideoInfo(infoApiUrl)
-	if err != nil {
-		videos, err = getVideoInfo(defaultApiUrl)
+	//videos, err := getVideoInfo(infoApiUrl)
+	//if err != nil {
+		videos, err := getVideoInfo(defaultApiUrl)
 		if err != nil {
 			fmt.Println("Sorry this video is cannot be download.", err)
 			return nil, err
 		}
 		return videos, nil
-	}
-	return videos, nil
+	//}
+	//return videos, nil
 }
 
 func getVideoInfo(url string) ([]domain.Video, error) {
@@ -63,43 +64,48 @@ func getVideoInfo(url string) ([]domain.Video, error) {
 	}
 
 	// Stratergy pattern
-	var title, author, streamMapStr string
+	var title, author, streamMapStr, playerScript string
 	if s.Contains(url, YoutubeVideoInfoApi) {
 		title, author, streamMapStr, err = extractFromInfoApi(string(body))
 	} else {
-		title, author, streamMapStr, err = extractFromDefault(string(body))
+		title, author, streamMapStr, playerScript, err = extractFromDefault(string(body))
 	}
 	if err != nil {
 		return nil, err
 	}
 
-	return constructVideos(title, author, streamMapStr)
+	return constructVideos(title, author, streamMapStr, playerScript)
 }
 
-func extractFromDefault(strBody string) (string, string, string, error) {
+func extractFromDefault(strBody string) (string, string, string, string, error) {
 	streamMapFilter := "url_encoded_fmt_stream_map\":"
 	streamMapRegexp, err := regexp.Compile(streamMapFilter + "(.*?)\",")
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", err
 	}
 	titleRegexp, err := regexp.Compile("<title>(.*?)<\\/title>")
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", err
 	}
 	authorRegexp, err := regexp.Compile("author\":\"(.*?)\",")
 	if err != nil {
-		return "", "", "", err
+		return "", "", "", "", err
+	}
+	playerScriptRegexp, err := regexp.Compile(`src="(.*?)base.js`)
+	if err != nil {
+		return "", "", "", "", err
 	}
 	title := titleRegexp.FindString(strBody)
 	author := authorRegexp.FindString(strBody)
 	title = title[len("<title>") : len(title)-len("</title>")]
 	author = author[len("author:\"")+1 : len(author)-2]
+	playerScript := s.Replace(playerScriptRegexp.FindString(strBody), `src="`, "", -1)
 
 	streamMapStr := streamMapRegexp.FindString(strBody)
 	streamMapStr = streamMapStr[len(streamMapFilter)+1 : len(streamMapStr)-2]
 	streamMapStr = s.Replace(streamMapStr, "\\u0026", "&", -1)
 
-	return title, author, streamMapStr, err
+	return title, author, streamMapStr, playerScript, err
 }
 
 func extractFromInfoApi(strBody string) (string, string, string, error) {
@@ -121,7 +127,7 @@ func extractFromInfoApi(strBody string) (string, string, string, error) {
 	return title, author, streamMapStr, nil
 }
 
-func constructVideos(title, author, streamMapStr string) ([]domain.Video, error) {
+func constructVideos(title, author, streamMapStr, playerScript string) ([]domain.Video, error) {
 	streamList := s.Split(streamMapStr, ",")
 	videos := make([]domain.Video, 0)
 	for _, streamItem := range streamList {
@@ -129,13 +135,20 @@ func constructVideos(title, author, streamMapStr string) ([]domain.Video, error)
 		if err != nil {
 			return nil, err
 		}
-		videos = append(videos, domain.NewVideo(
+		v := domain.NewVideo(
 			title,
 			author,
 			stream["quality"][0],
 			stream["type"][0],
 			stream["url"][0],
-		))
+			playerScript,
+		)
+		for k, val := range stream {
+			v.GetMeta()[k] = val[0]
+		}
+		url, _ := getDownloadURL(v.GetMeta(), v.GetPlayerScript())
+		v.SetUrl(url.String())
+		videos = append(videos, v)
 	}
 	return videos, nil
 }

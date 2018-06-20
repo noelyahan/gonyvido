@@ -18,6 +18,8 @@ type Video struct {
 	videoType string
 	url       string
 
+	playerScript     string
+	meta             map[string]interface{}
 	videoLength      int
 	downloadedLength int
 	downloadPro      chan float64
@@ -27,6 +29,18 @@ type Video struct {
 
 func (v *Video) getUrl() string {
 	return v.url
+}
+
+func (v *Video) SetUrl(url string) {
+	v.url = url
+}
+
+func (v *Video) GetMeta() map[string]interface{} {
+	return v.meta
+}
+
+func (v *Video) GetPlayerScript() string {
+	return v.playerScript
 }
 
 func (v Video) getExt() string {
@@ -68,13 +82,15 @@ func (v *Video) SetSavePath(savePath string) *Video {
 	return v
 }
 
-func NewVideo(t, a, q, vt, url string) Video {
+func NewVideo(t, a, q, vt, url, script string) Video {
 	return Video{
 		t,
 		a,
 		q,
 		vt,
 		url,
+		script,
+		make(map[string]interface{}),
 		0,
 		0,
 		make(chan float64),
@@ -118,6 +134,8 @@ func (v *Video) Write(b []byte) (n int, err error) {
 }
 
 func (v *Video) Download() *Video {
+	//log.Panic(v.getUrl())
+
 	// this has to have a public chan to notify the download is done
 	go func() {
 		resp, err := http.Get(v.getUrl())
@@ -161,7 +179,7 @@ func (v *Video) ToMP3() {
 		log.Fatal("ffmpeg not found")
 	}
 	fmt.Println(`Converting:	` + v.GetTitle() + ` to mp3`)
-	cmd := exec.Command(ffmpeg, "-y", "-loglevel", "quiet", "-i", v.getSavePath() + mp4, "-b:a", "320K", "-vn", v.getSavePath() + mp3)
+	cmd := exec.Command(ffmpeg, "-y", "-loglevel", "quiet", "-i", v.getSavePath()+mp4, "-b:a", "320K", "-vn", v.getSavePath()+mp3)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -170,7 +188,6 @@ func (v *Video) ToMP3() {
 	}
 	fmt.Println(`Finished:	` + v.GetTitle() + `.mp3`)
 }
-
 
 func removeFile(file string) {
 	err := os.Remove(file)
