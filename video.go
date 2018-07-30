@@ -1,14 +1,14 @@
-package domain
+package gonyvido
 
 import (
-	s "strings"
 	"fmt"
 	"github.com/gosuri/uiprogress"
-	"os"
-	"net/http"
 	"io"
 	"log"
+	"net/http"
+	"os"
 	"os/exec"
+	s "strings"
 )
 
 type Video struct {
@@ -134,7 +134,7 @@ func (v *Video) Write(b []byte) (n int, err error) {
 }
 
 func (v *Video) Download() *Video {
-	//log.Panic(v.getUrl())
+	log.Panic(v.getUrl())
 
 	// this has to have a public chan to notify the download is done
 	go func() {

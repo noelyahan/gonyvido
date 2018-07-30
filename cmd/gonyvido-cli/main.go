@@ -2,8 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/noelyahan/gonyvido/domain"
-	gonyvido "github.com/noelyahan/gonyvido/api"
+	"github.com/noelyahan/gonyvido"
 )
 
 const (
@@ -20,7 +19,7 @@ func main() {
 
 	flag.Parse()
 
-	var video *domain.Video
+	var video *gonyvido.Video
 
 	switch *quality {
 	case "high":

@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 HASH=""
 VERSION="1.0.0"
 RELEASE_PATH="releases"

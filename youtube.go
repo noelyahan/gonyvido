@@ -1,4 +1,4 @@
-package youtube
+package gonyvido
 
 import (
 	"errors"
@@ -8,18 +8,16 @@ import (
 	"net/url"
 	"regexp"
 	s "strings"
-	"github.com/noelyahan/gonyvido/domain"
 )
 
 const (
 	YoutubeVideoInfoApi = "http://youtube.com/get_video_info?video_id="
 	YoutubeWatchUrl     = "https://www.youtube.com/watch?v"
 	YoutubeShortUrl     = "youtu.be"
-	youtubeBaseURL     = "https://www.youtube.com/"
+	youtubeBaseURL      = "https://www.youtube.com/"
 )
 
-
-func GetYoutubeVideos(url string) ([]domain.Video, error) {
+func GetYoutubeVideos(url string) ([]Video, error) {
 	var videoId string
 	splitted := s.Split(url, "=")
 	if len(splitted) > 1 {
@@ -39,17 +37,18 @@ func GetYoutubeVideos(url string) ([]domain.Video, error) {
 
 	//videos, err := getVideoInfo(infoApiUrl)
 	//if err != nil {
-		videos, err := getVideoInfo(defaultApiUrl)
-		if err != nil {
-			fmt.Println("Sorry this video is cannot be download.", err)
-			return nil, err
-		}
-		return videos, nil
+	videos, err := getVideoInfo(defaultApiUrl)
+	if err != nil {
+		fmt.Println("Sorry this video is cannot be download.", err)
+		return nil, err
+	}
+	return videos, nil
 	//}
 	//return videos, nil
 }
 
-func getVideoInfo(url string) ([]domain.Video, error) {
+func getVideoInfo(url string) ([]Video, error) {
+	// TODO add the url parser
 	resp, err := http.Get(url)
 	if err != nil {
 		return nil, err
@@ -98,12 +97,17 @@ func extractFromDefault(strBody string) (string, string, string, string, error) 
 	title := titleRegexp.FindString(strBody)
 	author := authorRegexp.FindString(strBody)
 	title = title[len("<title>") : len(title)-len("</title>")]
-	author = author[len("author:\"")+1 : len(author)-2]
+	if len(author) > 0 {
+		author = author[len("author:\"")+1 : len(author)-2]
+	}
 	playerScript := s.Replace(playerScriptRegexp.FindString(strBody), `src="`, "", -1)
 
 	streamMapStr := streamMapRegexp.FindString(strBody)
-	streamMapStr = streamMapStr[len(streamMapFilter)+1 : len(streamMapStr)-2]
-	streamMapStr = s.Replace(streamMapStr, "\\u0026", "&", -1)
+
+	if len(streamMapStr) > 0 {
+		streamMapStr = streamMapStr[len(streamMapFilter)+1 : len(streamMapStr)-2]
+		streamMapStr = s.Replace(streamMapStr, "\\u0026", "&", -1)
+	}
 
 	return title, author, streamMapStr, playerScript, err
 }
@@ -127,15 +131,15 @@ func extractFromInfoApi(strBody string) (string, string, string, error) {
 	return title, author, streamMapStr, nil
 }
 
-func constructVideos(title, author, streamMapStr, playerScript string) ([]domain.Video, error) {
+func constructVideos(title, author, streamMapStr, playerScript string) ([]Video, error) {
 	streamList := s.Split(streamMapStr, ",")
-	videos := make([]domain.Video, 0)
+	videos := make([]Video, 0)
 	for _, streamItem := range streamList {
 		stream, err := url.ParseQuery(streamItem)
 		if err != nil {
 			return nil, err
 		}
-		v := domain.NewVideo(
+		v := NewVideo(
 			title,
 			author,
 			stream["quality"][0],

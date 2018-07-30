@@ -1,4 +1,4 @@
-package youtube
+package gonyvido
 
 // source: rylio/ytdl project
 import (
