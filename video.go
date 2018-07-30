@@ -134,7 +134,7 @@ func (v *Video) Write(b []byte) (n int, err error) {
 }
 
 func (v *Video) Download() *Video {
-	log.Panic(v.getUrl())
+	//log.Panic(v.getUrl())
 
 	// this has to have a public chan to notify the download is done
 	go func() {
