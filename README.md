@@ -1,4 +1,4 @@
-![Micro](./assets/gonyvido-logo.png)
+![Micro](./logo/gonyvido-logo.png)
 # gonyvido: Video Downloader for Go
 [![License MIT](https://img.shields.io/badge/license-MIT-lightgrey.svg?style=flat)](LICENSE)
 
@@ -13,7 +13,7 @@ install & try it out ! :v:
 gonyvido --url https://www.youtube.com/watch?v=3sCGysVB41k
 ```
 
-![Micro](./assets/gonyvido-app.gif)
+![Micro](./logo/gonyvido-app.gif)
 
 ## Installation
 
